@@ -24,10 +24,6 @@ If the server receives -2, it exits.
 #include <unistd.h>
 #include <errno.h>
 
-#include <iostream>
-using namespace std;
-
-const int tcpport = 51716;
 
 void error( char *msg ) {
   perror(  msg );
@@ -59,72 +55,46 @@ int getData( int sockfd ) {
 }
 
 int main(int argc, char *argv[]) {
-
-    cout << "## c++ TCP Server" << endl;
-
-     int portno = tcpport;
-     int sockfd, newsockfd, clilen;
+     int sockfd, newsockfd, portno = 51717, clilen;
      char buffer[256];
      struct sockaddr_in serv_addr, cli_addr;
      int n;
      int data;
 
-    cout << "TCP using Port: " << portno << endl;
-    //printf( "using port #%d\n", portno );
+     printf( "using port #%d\n", portno );
     
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    // AF_INET is an address family that is used to designate the type of addresses that your socket can communicate with (in this case, Internet Protocol v4 addresses). 
-    // SOCK_STREAM = Socket Filestream
-
-    if (sockfd < 0) 
+     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+     if (sockfd < 0) 
          error( const_cast<char *>("ERROR opening socket") );
-    else 
-      cout << "TCP Socket open" << endl;
-
-
      bzero((char *) &serv_addr, sizeof(serv_addr));
-     // mit zero vorbelegen
 
-     serv_addr.sin_family = AF_INET;    // AF_INET is an address family 
-     serv_addr.sin_addr.s_addr = INADDR_ANY;  // It binds the socket to all available interfaces.
-     serv_addr.sin_port = htons( portno );  // The htons function converts a u_short from host to TCP/IP network byte order (which is big-endian).
-
-
-     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
+     serv_addr.sin_family = AF_INET;
+     serv_addr.sin_addr.s_addr = INADDR_ANY;
+     serv_addr.sin_port = htons( portno );
+     if (bind(sockfd, (struct sockaddr *) &serv_addr,
+              sizeof(serv_addr)) < 0) 
        error( const_cast<char *>( "ERROR on binding" ) );
      listen(sockfd,5);
      clilen = sizeof(cli_addr);
   
      //--- infinite wait on a connection ---
      while ( 1 ) {
-        printf( "TCP waiting for new client...\n" );
-
-        // sockfd and newsockfd are file descriptors, i.e. array subscripts into the file descriptor table . These two variables store the values returned by the socket system call and the accept system call.
-        //The accept() system call causes the process to block until a client connects to the server.
-        // It returns a new file descriptor, 
-        // newsockfd ist der neue file descriptor
+        printf( "waiting for new client...\n" );
         if ( ( newsockfd = accept( sockfd, (struct sockaddr *) &cli_addr, (socklen_t*) &clilen) ) < 0 )
             error( const_cast<char *>("ERROR on accept") );
         printf( "opened new communication with client\n" );
-
         while ( 1 ) {
              //---- wait for a number from client ---
              data = getData( newsockfd );
              printf( "got %d\n", data );
-             cout << "TCP incoming message: " << data << endl;
              if ( data < 0 ) 
                 break;
                 
              data = func( data );
-             data = 999;
-             char msg[] = "Hello World !\n";
-             
+
              //--- send new data back --- 
              printf( "sending back %d\n", data );
-             //sendData( newsockfd,datamsg );
-
-             send(newsockfd, msg, strlen(msg), 0); 
-
+             sendData( newsockfd, data );
         }
         close( newsockfd );
 
