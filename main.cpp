@@ -115,17 +115,22 @@ int main(int argc, char *argv[]) {
              if ( data < 0 ) 
                 break;
                 
-             data = func( data );
-             data = 999;
-             char msg[] = "Hello World !\n";
-             
+             // Orginal Code   
+             //data = func( data );
+             //data = 999;
+             // char msg[] = "Send back from TCP Server \n ";
+             //sendData( newsockfd,datamsg );
+             // send(newsockfd, msg, strlen(msg), 0); 
+
+
              //--- send new data back --- 
              printf( "sending back %d\n", data );
-             //sendData( newsockfd,datamsg );
-
-             send(newsockfd, msg, strlen(msg), 0); 
-
-        }
+             
+            std::string dataToSend = "TCP Answer: " + std::to_string(data);
+            uint32_t dataLength = htonl(dataToSend.size()); // Ensure network byte order // when sending the data length
+            send(newsockfd, dataToSend.c_str(), dataToSend.size(), 0); // Send the string  data 
+             
+          }
         close( newsockfd );
 
         //--- if -2 sent by client, we can quit ---
